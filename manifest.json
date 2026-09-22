@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "io.github.jfdnet.auto-power",
+  "name": "Omarchy Auto Power",
+  "version": "1.0.0",
+  "author": "jfdnet",
+  "license": "MIT",
+  "description": "Battery-aware idle power management with a half-moon/full-moon bar toggle: auto suspend and poweroff on battery, respecting AC power and the stay-awake indicator (screensaver, lock, suspend and poweroff suppressed while awake).",
+  "kinds": ["service", "bar-widget"],
+  "keepLoaded": true,
+  "entryPoints": {
+    "service": "Service.qml",
+    "barWidget": "Widget.qml"
+  },
+  "barWidget": {
+    "displayName": "Auto Power",
+    "description": "Half/full moon toggle for stay-awake (suppress screensaver, lock, suspend and poweroff on idle)",
+    "category": "System",
+    "allowMultiple": false,
+    "defaultSection": "right"
+  }
+}
