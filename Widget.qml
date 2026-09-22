@@ -16,8 +16,10 @@ BarWidget {
   // JetBrainsMono Nerd Font (Material Design Icons):
   //   U+F0F61 md-moon_first_quarter (half moon, dimming  = power saving)
   //   U+F0F62 md-moon_full          (full moon, bright   = stay awake)
-  readonly property string iconHalfMoon: "\uF0F61"
-  readonly property string iconFullMoon: "\uF0F62"
+  // NOTE: QML "\u" escapes take exactly 4 hex digits — 5-digit codepoints
+  // MUST go through String.fromCodePoint, else they silently misparse.
+  readonly property string iconHalfMoon: String.fromCodePoint(0xF0F61)
+  readonly property string iconFullMoon: String.fromCodePoint(0xF0F62)
 
   implicitWidth: button.implicitWidth
   implicitHeight: button.implicitHeight
@@ -75,6 +77,7 @@ BarWidget {
     anchors.fill: parent
     bar: root.bar
     text: root.stayAwake ? root.iconFullMoon : root.iconHalfMoon
+    fontFamily: "JetBrainsMono Nerd Font"
     fontSize: Style.bar.iconFont
     horizontalMargin: 6
     tooltipText: root.stayAwake
