@@ -9,8 +9,8 @@ management is active; full moon means stay-awake (everything suppressed).
 
 | State | Icon | Behaviour |
 |---|---|---|
-| Auto power | half moon (U+F0F61) | Idle **suspend** after 10 min, **poweroff** after 30 min — battery only, skipped on AC power |
-| Stay awake | full moon (U+F0F62) | Screensaver, lock, suspend and poweroff all suppressed |
+| Auto power | half moon (U+F0F61) | Idle **suspend** after 10 min, **hibernate** after 30 min — battery only, skipped on AC power |
+| Stay awake | full moon (U+F0F62) | Screensaver, lock, suspend and hibernate all suppressed |
 
 - The toggle flips Omarchy's stay-awake indicator
   (`~/.local/state/omarchy/indicators/stay-awake`), which both this plugin's
@@ -64,10 +64,10 @@ backed-up configuration even if the shell is shutting down.
 
 为 [Omarchy](https://omarchy.org/) 打造的电池感知电源管理插件。
 
-- **半月** = 自动电源管理：空闲 10 分钟休眠、30 分钟关机（仅电池，插电自动跳过）
-- **满月** = 保持唤醒：屏保 / 锁屏 / 休眠 / 关机全部抑制（点击 bar 上的月亮切换）
-- 切换写入 Omarchy 的 stay-awake 指示文件，屏保锁屏（shell idle 插件）与休眠
-  关机（本插件）同时生效
+- **半月** = 自动电源管理：空闲 10 分钟待机、30 分钟休眠（仅电池，插电自动跳过）
+- **满月** = 保持唤醒：屏保 / 锁屏 / 待机 / 休眠全部抑制（点击 bar 上的月亮切换）
+- 切换写入 Omarchy 的 stay-awake 指示文件，屏保锁屏（shell idle 插件）与待机
+  休眠（本插件）同时生效
 - 启用时自动备份并接管 `~/.config/hypr/hypridle.conf`，禁用时自动还原
 - 改策略请编辑插件目录内的 `hypridle.conf`，改完 `omarchy restart shell`
 
