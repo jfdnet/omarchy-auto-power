@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "id": "io.github.jfdnet.auto-power",
   "name": "Omarchy Auto Power",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "author": "jfdnet",
   "license": "MIT",
-  "description": "Battery-aware idle power management with stay-awake toggle: auto suspend and hibernate on battery, respecting AC power. Hibernate preserves session across full power-off.",
+  "description": "Battery-aware idle power management with stay-awake toggle: suspend-then-hibernate on battery (auto RTC transition to zero-power hibernate), respecting AC power and the stay-awake indicator.",
   "kinds": [
     "service",
     "bar-widget"
