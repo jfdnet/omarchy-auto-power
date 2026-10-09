@@ -55,6 +55,19 @@ pin it to a fixed delay, create `/etc/systemd/sleep.conf.d/auto-power.conf`:
 HibernateDelaySec=20min
 ```
 
+### Idle never suspends, log shows `Access denied`
+
+`systemctl suspend-then-hibernate` fails with "Call to SuspendThenHibernate
+failed: Access denied" when `suspend-then-hibernate.target` is masked — a
+common leftover from pre-hibernate setup. Check with
+`systemctl is-enabled suspend-then-hibernate.target` (`masked` = the problem)
+and unmask it:
+
+```bash
+pkexec rm /etc/systemd/system/suspend-then-hibernate.target
+busctl call org.freedesktop.login1 /org/freedesktop/login1 org.freedesktop.login1.Manager CanSuspendThenHibernate  # expect "yes"
+```
+
 ## Uninstall
 
 ```bash
