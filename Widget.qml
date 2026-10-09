@@ -81,8 +81,8 @@ BarWidget {
     fontSize: Style.bar.iconFont
     horizontalMargin: 6
     tooltipText: root.stayAwake
-      ? "Stay awake ON · 禁止屏保/锁屏/休眠/关机 · 点击恢复自动电源管理"
-      : "Auto power ON · 空闲自动休眠/关机 · 点击保持唤醒"
+      ? "Stay awake ON · 禁止屏保/锁屏/待机/休眠 · 点击恢复自动电源管理"
+      : "Auto power ON · 空闲待机并自动转休眠 · 点击保持唤醒"
     onPressed: function() { root.toggle() }
   }
 }

@@ -5,7 +5,7 @@
   "version": "2.0.0",
   "author": "jfdnet",
   "license": "MIT",
-  "description": "Battery-aware idle power management with stay-awake toggle: suspend-then-hibernate after 10 min idle (systemd RTC hibernates after 20 min) \u2014 battery only, skipped on AC power and when stay-awake is enabled.",
+  "description": "Battery-aware idle power management with stay-awake toggle: suspend-then-hibernate after 10 min idle — battery only, skipped on AC power and when stay-awake is enabled.",
   "kinds": [
     "service",
     "bar-widget"
@@ -17,7 +17,7 @@
   },
   "barWidget": {
     "displayName": "Auto Power",
-    "description": "Half/full moon toggle for stay-awake (suppress screensaver, lock, suspend and poweroff on idle)",
+    "description": "Half/full moon toggle for stay-awake (suppress screensaver, lock, suspend and hibernate on idle)",
     "category": "System",
     "allowMultiple": false,
     "defaultSection": "right"
