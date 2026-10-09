@@ -1,0 +1,142 @@
+#!/bin/bash
+# 锁屏之后的电源动作（屏保/锁屏由 omarchy-shell idle 负责）：
+#   锁屏后 2 秒   熄屏 (DPMS + 亮度)   插电/电池都执行
+#   锁屏后 5 分钟 休眠                仅电池
+#   锁屏后 25 分钟 强制休眠           仅电池（跨休眠：RTC 闹钟到点唤醒后关机）
+# 合计空闲：3min 屏保 / 5min 锁屏+熄屏 / 10min 休眠 / 30min 关机
+SCREEN_OFF_DELAY=2
+SUSPEND_AFTER_LOCK=300
+POWEROFF_AFTER_LOCK=1500
+WARN_BEFORE=60
+POLL=5
+
+# 休眠截止时间戳（epoch），睡眠前由 root 钩子 omarchy-arm-wakealarm.service
+# 读它来 arm RTC wakealarm——suspend 会冻结本脚本，只有 RTC 能跨睡眠到点唤醒。
+STATE_FILE="$HOME/.local/state/omarchy/auto-poweroff-at"
+
+lock_since=0
+last_resume=0
+warned=false
+screen_off=false
+last_locked=false
+
+log() { printf '[%s] %s\n' "$(date '+%F %T')" "$*"; }
+
+dpms() {
+  local state=$1
+  hyprctl dispatch "hl.dsp.dpms(\"$state\")" >/dev/null 2>&1 || hyprctl dispatch dpms "$state" >/dev/null 2>&1
+}
+
+blank_brightness() {
+  omarchy-brightness-display off >/dev/null 2>&1
+  omarchy-brightness-keyboard off >/dev/null 2>&1
+}
+
+restore_brightness() {
+  omarchy-brightness-display on >/dev/null 2>&1
+  omarchy-brightness-keyboard restore >/dev/null 2>&1
+}
+
+on_ac() { omarchy power present >/dev/null 2>&1; }
+
+stay_awake() { [[ -f "$HOME/.local/state/omarchy/indicators/stay-awake" ]]; }
+
+log "service started: dpms=${SCREEN_OFF_DELAY}s suspend=${SUSPEND_AFTER_LOCK}s poweroff=${POWEROFF_AFTER_LOCK}s poll=${POLL}s"
+
+while true; do
+  now=$(date +%s)
+  # isLocked 可能因 shell 锁状态绑定卡死而恒真(2026-10-08 事故:锁面 12s 未挂上,
+  # finishUnlock 后 locked 未重算,导致活跃会话被每 5 分钟 suspend 一轮)。
+  # 交叉核对 status 的真实标志:锁面确实存在/正在挂上才视为已锁,否则宁可不休眠。
+  lockstat=$(omarchy-shell lock status 2>/dev/null || true)
+  if [[ "$lockstat" =~ (requested|sessionLocked|secure)\":true ]]; then
+    locked=true
+  else
+    locked=false
+  fi
+
+  if stay_awake; then
+    if [[ "$screen_off" == "true" ]]; then
+      dpms on
+      restore_brightness
+      screen_off=false
+      log "screen on (stay-awake)"
+    fi
+    rm -f "$STATE_FILE"
+    lock_since=0
+    warned=false
+    sleep "$POLL"
+    continue
+  fi
+
+  # 锁屏事件只记一次
+  if [[ "$locked" == "true" && "$last_locked" != "true" ]]; then
+    lock_since=$now
+    log "lock detected"
+  fi
+  last_locked="$locked"
+
+  if [[ "$locked" == "true" ]]; then
+    elapsed=$(( now - lock_since ))
+
+    # 锁屏后 2 秒熄屏
+    if (( elapsed >= SCREEN_OFF_DELAY )) && [[ "$screen_off" == "false" ]]; then
+      dpms off
+      blank_brightness
+      screen_off=true
+      log "screen off (dpms+brightness+keyboard) at ${elapsed}s post-lock"
+    fi
+
+    # 锁屏即代表用户已离开（锁屏由 5 分钟 idle 触发），计时只看锁屏时长。
+    # 不能再问 omarchy-shell idle status：锁屏后 idle-monitor 不再更新，
+    # idle 永远卡 false，会无限重置计时导致永不休眠/关机。
+    # 解锁分支已负责重置计时；锁屏界面上的误触不应取消休眠。
+
+    # 仅电池执行休眠/关机
+    if ! on_ac; then
+      # 记录绝对休眠截止时间，供 RTC 唤醒钩子读取（锁屏时刻起算，不受休眠影响）
+      [[ -f $STATE_FILE ]] || echo $(( lock_since + POWEROFF_AFTER_LOCK )) > "$STATE_FILE"
+
+      if (( elapsed >= POWEROFF_AFTER_LOCK )); then
+        log "auto-hibernate (battery, ${elapsed}s post-lock)"
+        systemctl hibernate
+        # 恢复后（用户按键唤醒）：从唤醒时刻重新计时，防止立即再休眠（死循环）。
+        # lock_since 必须设为 $now 而非 0：锁屏跨休眠不变（无 unlocked→locked 转换），
+        # 设 0 会让 elapsed = now - 0 = 天文数字，立即再次触发休眠。
+        # poweroff 无此问题（进程全部终止）；hibernate 保留进程状态，必须重置。
+        rm -f "$STATE_FILE"
+        lock_since=$now
+        last_resume=$now
+        warned=false
+        screen_off=false
+        log "hibernate resumed, fresh cycle from now"
+      elif (( elapsed >= SUSPEND_AFTER_LOCK )) && (( now - last_resume >= SUSPEND_AFTER_LOCK )); then
+        log "auto-suspend (battery, ${elapsed}s post-lock)"
+        systemctl suspend
+        # 唤醒后：重新记清醒时长（防止立即再休眠），但 lock_since 不动——
+        # 休眠截止时间是从锁屏起算的绝对时刻，休眠/唤醒不推迟它。
+        last_resume=$now
+        warned=false
+        screen_off=false
+      elif (( elapsed >= SUSPEND_AFTER_LOCK - WARN_BEFORE )) && (( now - last_resume >= SUSPEND_AFTER_LOCK - WARN_BEFORE )) && [[ "$warned" == "false" ]]; then
+        omarchy-notification-send -u critical -g 󰒲 "即将自动休眠" \
+          "还有 $(( SUSPEND_AFTER_LOCK - elapsed )) 秒将待机 (解锁可取消)" >/dev/null 2>&1
+        warned=true
+      fi
+    else
+      rm -f "$STATE_FILE"
+    fi
+  else
+    if [[ "$screen_off" == "true" ]]; then
+      dpms on
+      restore_brightness
+      screen_off=false
+      log "screen on (unlocked)"
+    fi
+    rm -f "$STATE_FILE"
+    lock_since=0
+    warned=false
+  fi
+
+  sleep "$POLL"
+done

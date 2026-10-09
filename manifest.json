@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "id": "io.github.jfdnet.auto-power",
   "name": "Omarchy Auto Power",
-  "version": "1.1.2",
+  "version": "2.0.0",
   "author": "jfdnet",
   "license": "MIT",
-  "description": "Battery-aware idle power management with stay-awake toggle: suspend after 10 min idle, hibernate after 30 min idle \u2014 battery only, skipped on AC power and when stay-awake is enabled.",
+  "description": "Battery-aware idle power management with stay-awake toggle: suspend-then-hibernate after 10 min idle (systemd RTC hibernates after 20 min) \u2014 battery only, skipped on AC power and when stay-awake is enabled.",
   "kinds": [
     "service",
     "bar-widget"

@@ -1,0 +1,15 @@
+[Unit]
+Description=Auto-suspend when locked and idle (power saving)
+After=graphical-session.target
+PartOf=graphical-session.target
+ConditionEnvironment=OMARCHY_PATH
+ConditionEnvironment=WAYLAND_DISPLAY
+
+[Service]
+Type=simple
+ExecStart=/home/jfd/.local/bin/omarchy-idle-suspend
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=graphical-session.target

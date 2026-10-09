@@ -1,0 +1,10 @@
+[Unit]
+Description=Arm RTC wakealarm for auto power deadline
+Before=sleep.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/omarchy-arm-wakealarm
+
+[Install]
+WantedBy=sleep.target

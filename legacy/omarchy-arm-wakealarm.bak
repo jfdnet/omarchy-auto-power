@@ -1,0 +1,22 @@
+#!/bin/bash
+# 睡眠前由 omarchy-arm-wakealarm.service（root, Before=sleep.target）调用：
+# 只要存在未过期的自动关机截止时间就 arm RTC wakealarm 到点唤醒。
+# 不检查 AC：休眠中可能拔电，是否关机由唤醒后的 omarchy-idle-suspend
+# 按实时电源状态决定（电池→关机，插电→不动）。
+# 无论是否 arm，先清零 wakealarm，顺带清除过期闹钟造成的无谓唤醒。
+set -u
+STATE=/home/jfd/.local/state/omarchy/auto-poweroff-at
+RTC=/sys/class/rtc/rtc0/wakealarm
+
+log() { logger -t omarchy-arm-wakealarm -- "$*"; }
+
+echo 0 > "$RTC" 2>/dev/null || true
+
+[[ -f $STATE ]] || { log "no deadline file; wakealarm cleared"; exit 0; }
+
+deadline=$(cat "$STATE" 2>/dev/null)
+[[ $deadline =~ ^[0-9]+$ ]] || { log "invalid deadline file content; wakealarm cleared"; exit 0; }
+(( deadline > $(date +%s) )) || { log "deadline $deadline already past; wakealarm cleared"; exit 0; }
+
+echo "$deadline" > "$RTC"
+log "armed RTC wakealarm for $(date -d @"$deadline" '+%F %T') (epoch $deadline)"
