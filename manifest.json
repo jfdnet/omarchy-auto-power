@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "io.github.jfdnet.auto-power",
   "name": "Omarchy Auto Power",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "author": "jfdnet",
   "license": "MIT",
   "description": "Battery-aware idle power management with stay-awake toggle: suspend-then-hibernate after 10 min idle — battery only, skipped on AC power and when stay-awake is enabled.",

@@ -82,8 +82,10 @@ folder.
 The service runs a Quickshell `IdleMonitor` with a 600 s timeout, gated by the
 stay-awake indicator. On idle it re-checks power state at trigger time
 (`/sys/class/power_supply`: skip when no battery exists or any AC source is
-online) and runs `systemctl suspend-then-hibernate`. Wayland idle inhibitors
-(video playback, etc.) are respected, matching the stock idle plugin.
+online) and runs `systemctl suspend-then-hibernate`. The power layer ignores
+Wayland idle inhibitors (a single held inhibitor — e.g. a browser media tab —
+can otherwise keep the machine awake on battery until it drains; 2026-10-10
+incident). Watching video or presenting? Toggle stay-awake (full moon).
 
 Idle chain on battery: 2.5 min screensaver → 5 min lock + blank (stock
 `omarchy.idle`, configurable in `~/.config/omarchy/shell.json`) → 10 min

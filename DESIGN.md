@@ -40,7 +40,7 @@ graph TD
 ```
 
 - **显示层**：`~/.config/omarchy/shell.json` idle 块（screensaver=180 / lock=300）。锁屏自带熄屏（lock Service.qml `blankProcess`：键盘+屏幕亮度 off）→ **脚本的 2s 熄屏冗余，删**。
-- **电源层**：插件 `Service.qml` 内 `IdleMonitor timeout=600`（`respectInhibitors: true`，与官方 idle 插件一致），触发时经 shell 门控（stay-awake → 无电池 → 任一 AC online 均跳过）后执行 `systemctl suspend-then-hibernate`。**hypridle 整体移除**：stock Omarchy 不带 hypridle（市场 #10487/#10528 两次拒绝的 blocker，且 G6 本就要求组件最少）；ext-idle-notify 由 Quickshell 直读，权威源不变。
+- **电源层**：插件 `Service.qml` 内 `IdleMonitor timeout=600`（`respectInhibitors: false`——电源层不认 inhibitor,v2.0.1 修正;官方 idle 插件管屏保锁屏仍 respect）,触发时经 shell 门控（stay-awake → 无电池 → 任一 AC online 均跳过）后执行 `systemctl suspend-then-hibernate`。**hypridle 整体移除**：stock Omarchy 不带 hypridle（市场 #10487/#10528 两次拒绝的 blocker，且 G6 本就要求组件最少）；ext-idle-notify 由 Quickshell 直读，权威源不变。
 - **深度层**：systemd 原生。`/etc/systemd/sleep.conf.d/auto-power.conf` `HibernateDelaySec=20min` 为**可选调优**（README 有说明）；未配置时 systemd 缺省=低电量转休眠，插件无 root 依赖。
 
 ## 4. 删除清单（v1.1.2 遗产）
@@ -73,7 +73,7 @@ graph TD
 | stay-awake | IdleMonitor `enabled=false`（+门控兜底）；官方 idle 链同受抑制 | G4 |
 | 电池拔插 | 触发时实时读 `/sys/class/power_supply` | — |
 | 无电池（台式机） | 门控跳过，永不自动睡 | G2 |
-| 视频播放等 inhibitor | `respectInhibitors: true`，与官方 idle 一致 | — |
+| 视频播放等 inhibitor | 电源层**不认** inhibitor(v2.0.1);看视频/演示 → 手动满月。教训:10-09 夜某应用挂 inhibitor,屏保/锁屏/待机全链条静默,电池耗到临界才由 upowerd 兜底休眠(10-10 08:25) | 电池优先 |
 
 ## 7. 迁移步骤（已完成 1-4）
 

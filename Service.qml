@@ -111,11 +111,14 @@ Item {
   IdleMonitor {
     id: idleMonitor
 
-    // Same authority the stock omarchy.idle plugin uses: compositor input
-    // idle via ext-idle-notify, Wayland inhibitors respected.
+    // Power layer ignores Wayland idle inhibitors: a single held inhibitor
+    // (e.g. a browser media tab) kept the machine awake all night on battery
+    // until upowerd's critical fallback (2026-10-10 incident). Interactive use
+    // is still protected by input activity; for video/presentations toggle
+    // stay-awake (full moon). Mirrors v1's hypridle ignore_dbus_inhibit.
     enabled: root.serviceEnabled
     timeout: root.idleTimeoutSeconds
-    respectInhibitors: true
+    respectInhibitors: false
     onIsIdleChanged: root.handleIdleChanged()
   }
 
