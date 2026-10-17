@@ -68,6 +68,30 @@ pkexec rm /etc/systemd/system/suspend-then-hibernate.target
 busctl call org.freedesktop.login1 /org/freedesktop/login1 org.freedesktop.login1.Manager CanSuspendThenHibernate  # expect "yes"
 ```
 
+### NVIDIA laptop: resume hangs at a black screen, or boots fresh instead of resuming
+
+Field-tested on an nvidia-open hybrid laptop. Two traps:
+
+1. **Corrupted images from unfrozen sessions.** `nvidia-utils` ships
+   `SYSTEMD_SLEEP_FREEZE_USER_SESSIONS=false` drop-ins for the sleep services;
+   with user sessions running while the hibernate snapshot is taken, the image
+   races disk writes and comes back broken — either a GPU hang right after the
+   LUKS prompt (black, no backlight) or an invalid image that the next boot
+   silently skips (`PM: Image not found` / `resume failed`). Mask the drop-ins
+   with same-named files under `/etc`:
+
+   ```bash
+   for svc in systemd-suspend systemd-hibernate systemd-suspend-then-hibernate; do
+     sudo mkdir -p /etc/systemd/system/$svc.service.d
+     sudo touch /etc/systemd/system/$svc.service.d/10-nvidia-no-freeze-session.conf
+   done
+   ```
+
+2. **Keep `NVreg_PreserveVideoMemoryAllocations=0`.** nvidia-open 615 has no
+   `/proc/driver/nvidia/suspend` procfs interface, so PVOA=1 cannot be honored:
+   the driver refuses to freeze at restore (`pci_pm_freeze returns -5`) and the
+   resume aborts to a fresh boot every time.
+
 ## Uninstall
 
 ```bash
